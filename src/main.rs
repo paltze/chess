@@ -1,9 +1,10 @@
 pub mod core;
 
 fn main() {
-    let test = core::moves::Square::from(29)
-        .expect("Invalid input 79")
-        .get_human_readable();
+    let board_res = core::board::BitBoard::from_fen("rnbqkbnr/pppppppp/8/7p/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    println!("{}{}", test.0, test.1);
+    match board_res {
+        Ok(board) => println!("{board}"),
+        Err(err) => println!("{err}")
+    }
 }
