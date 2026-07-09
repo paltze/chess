@@ -5,14 +5,14 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum BoardError {
-    FENInvalidChar(char),      // CB001
-    FENIncompleteRank(u8),     // CB002
-    FENRankTooLong(u8),        // CB003
-    FENTooManyRanks,           // CB004
-    FENNotEnoughRanks,         // CB005
-    FENTooManyPieces,          // CB006
-    FENInvalidWhiteKing,       // CB007
-    FENInvalidBlackKing,       // CB008
+    FENInvalidChar(char),  // CB001
+    FENIncompleteRank(u8), // CB002
+    FENRankTooLong(u8),    // CB003
+    FENTooManyRanks,       // CB004
+    FENNotEnoughRanks,     // CB005
+    FENTooManyPieces,      // CB006
+    FENInvalidWhiteKing,   // CB007
+    FENInvalidBlackKing,   // CB008
 }
 
 impl fmt::Display for BoardError {
@@ -45,8 +45,6 @@ impl fmt::Display for BoardError {
         }
     }
 }
-
-pub struct BitBoard(pub [u64; 12]);
 
 fn piece_index(c: char) -> usize {
     match c {
@@ -84,7 +82,7 @@ fn index_piece(i: usize) -> char {
         10 => 'b',
         11 => 'p',
 
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
@@ -99,6 +97,36 @@ fn index_piece(i: usize) -> char {
 /// 5: White pawns
 ///
 /// +6 each index for black variants
+pub struct BitBoard(pub [u64; 12]);
+
+impl fmt::Display for BitBoard {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut out = String::from("");
+
+        for rank in (0..8).rev() {
+            for file in 0..8 {
+                let mut found = false;
+
+                for piece in 0..12 {
+                    if self.0[piece] & (1u64 << (rank * 8 + file)) != 0 {
+                        out.push(index_piece(piece));
+                        out.push(' ');
+                        found = true;
+                    }
+                }
+
+                if !found {
+                    out.push_str(". ");
+                }
+            }
+
+            out.push('\n');
+        }
+
+        write!(f, "{out}")
+    }
+}
+
 impl BitBoard {
     pub fn new() -> BitBoard {
         BitBoard([0; 12])
@@ -185,33 +213,6 @@ impl BitBoard {
     }
 }
 
-impl fmt::Display for BitBoard {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut out = String::from("");
-
-        for rank in (0..8).rev() {
-            for file in 0..8 {
-                let mut found = false;
-
-                for piece in 0..12 {
-                    if self.0[piece] & (1u64 << (rank * 8 + file)) != 0 {
-                        out.push(index_piece(piece));
-                        out.push(' ');
-                        found = true;
-                    }
-                }
-
-                if !found {
-                    out.push_str(". ");
-                }
-            }
-
-            out.push('\n');
-        }
-
-        write!(f, "{out}")
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -219,9 +220,7 @@ mod tests {
 
     #[test]
     fn fen_starting_position() {
-        assert!(BitBoard::from_fen(
-            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-        ).is_ok());
+        assert!(BitBoard::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR").is_ok());
     }
 
     #[test]

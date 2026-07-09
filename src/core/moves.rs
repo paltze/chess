@@ -1,6 +1,12 @@
 //! Structs related to moves
 //!
 
+#[derive(Debug)]
+pub enum MovesError {
+    SquareInvalidIndex(u8),
+    MoveNotPromotion
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Piece {
     King,
@@ -27,9 +33,9 @@ pub enum Piece {
 pub struct Square(u8);
 
 impl Square {
-    pub fn from(a: u8) -> Option<Square> {
+    pub fn from(a: u8) -> Result<Square, MovesError> {
         // Only 0-63 are valid square indices
-        if a >= 64 { None } else { Some(Square(a)) }
+        if a >= 64 { Err(MovesError::SquareInvalidIndex(a)) } else { Ok(Square(a)) }
     }
 
     pub fn get_human_readable(self) -> (char, u8) {
@@ -111,42 +117,39 @@ impl Move {
         self.get_flags() == 3
     }
 
-    pub fn get_promotion_piece(self) -> Option<Piece> {
+    pub fn get_promotion_piece(self) -> Result<Piece, MovesError> {
         let test = self.get_flags() & 0b1011;
 
-        if test == 8 {
-            Some(Piece::Knight)
-        } else if test == 9 {
-            Some(Piece::Bishop)
-        } else if test == 10 {
-            Some(Piece::Rook)
-        } else if test == 11 {
-            Some(Piece::Queen)
-        } else {
-            None
+        match test {
+            8 => Ok(Piece::Knight),
+            9 => Ok(Piece::Bishop),
+            10 => Ok(Piece::Rook),
+            11 => Ok(Piece::Queen),
+            _ => Err(MovesError::MoveNotPromotion)
         }
     }
 
-    pub fn from_square(self) -> Option<Square> {
+    pub fn from_square(self) -> Result<Square, MovesError> {
         Square::from((self.0 & 0x3F) as u8)
     }
 
-    pub fn to_square(self) -> Option<Square> {
+    pub fn to_square(self) -> Result<Square, MovesError> {
         Square::from((self.0 >> 6 & 0x3F) as u8)
     }
 }
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     #[test]
     fn square_test_1() {
         let mut test = Square::from(0);
-        assert_eq!(test, Some(Square(0)));
+        assert!(matches!(test, Ok(Square(0))));
 
         test = Square::from(72);
-        assert_eq!(test, None);
+        assert!(matches!(test, Err(MovesError::SquareInvalidIndex(72))));
     }
 
     #[test]
@@ -174,7 +177,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b0001_000000_000000);
 
@@ -184,7 +187,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b0001_000000_000000);
 
@@ -194,7 +197,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b0010_000000_000000);
 
@@ -204,7 +207,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), true);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b0011_000000_000000);
 
@@ -214,7 +217,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), true);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b0100_000000_000000);
 
@@ -224,7 +227,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b0101_000000_000000);
 
@@ -234,7 +237,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), false);
-        assert_eq!(test.get_promotion_piece(), None);
+        assert!(matches!(test.get_promotion_piece(), Err(MovesError::MoveNotPromotion)));
 
         test = Move::from(0b1000_000000_000000);
 
@@ -244,7 +247,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), true);
-        assert_eq!(test.get_promotion_piece(), Some(Piece::Knight));
+        assert!(matches!(test.get_promotion_piece(), Ok(Piece::Knight)));
 
         test = Move::from(0b1110_000000_000000);
 
@@ -254,7 +257,7 @@ mod tests {
         assert_eq!(test.is_kingside_castle(), false);
         assert_eq!(test.is_queenside_castle(), false);
         assert_eq!(test.is_promotion(), true);
-        assert_eq!(test.get_promotion_piece(), Some(Piece::Rook));
+        assert!(matches!(test.get_promotion_piece(), Ok(Piece::Rook)));
     }
 
     #[test]
