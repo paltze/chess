@@ -3,47 +3,31 @@
 
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum BoardError {
-    FENInvalidChar(char),  // CB001
-    FENIncompleteRank(u8), // CB002
-    FENRankTooLong(u8),    // CB003
-    FENTooManyRanks,       // CB004
-    FENNotEnoughRanks,     // CB005
-    FENTooManyPieces,      // CB006
-    FENInvalidWhiteKing,   // CB007
-    FENInvalidBlackKing,   // CB008
-}
+    #[error("Error CB001: Invalid character in given FEN '{0}'")]
+    FENInvalidChar(char),
 
-impl fmt::Display for BoardError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::FENInvalidChar(c) => {
-                write!(f, "Error CB001: Invalid character in given FEN '{c}'")
-            }
-            Self::FENIncompleteRank(rank) => {
-                write!(f, "Error CB002: Rank {rank} incomplete in given FEN")
-            }
-            Self::FENRankTooLong(rank) => {
-                write!(f, "Error CB003: Rank {rank} too long in given FEN")
-            }
-            Self::FENTooManyRanks => write!(f, "Error CB004: Too many ranks in given FEN"),
-            Self::FENNotEnoughRanks => write!(f, "Error CB005: Not enough ranks in given FEN"),
-            Self::FENTooManyPieces => write!(f, "Error CB006: Too many pieces in the given FEN"),
-            Self::FENInvalidWhiteKing => {
-                write!(
-                    f,
-                    "Error CB007: Number of white kings in given FEN not exactly one"
-                )
-            }
-            Self::FENInvalidBlackKing => {
-                write!(
-                    f,
-                    "Error CB008: Number of black kings in given FEN not exactly one"
-                )
-            }
-        }
-    }
+    #[error("Error CB002: Rank {0} incomplete in given FEN")]
+    FENIncompleteRank(u8),
+
+    #[error("Error CB003: Rank {0} too long in given FEN")]
+    FENRankTooLong(u8),
+
+    #[error("Error CB004: Too many ranks in given FEN")]
+    FENTooManyRanks,
+
+    #[error("Error CB005: Not enough ranks in given FEN")]
+    FENNotEnoughRanks,
+
+    #[error("Error CB006: Too many pieces in the given FEN")]
+    FENTooManyPieces,
+
+    #[error("Error CB007: Number of white kings in given FEN not exactly one")]
+    FENInvalidWhiteKing,
+
+    #[error("Error CB008: Number of black kings in given FEN not exactly one")]
+    FENInvalidBlackKing,
 }
 
 fn piece_index(c: char) -> usize {

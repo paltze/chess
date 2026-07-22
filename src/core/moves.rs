@@ -1,9 +1,11 @@
 //! Structs related to moves
 //!
 
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum MovesError {
-    SquareInvalidIndex(u8),
+    #[error("Error CM001: Invalied square index '{0}'")]
+    SquareInvalidIndex(u8), // CM001
+    #[error("Error CM002: Trying to extract promotion piece from invalid move")]
     MoveNotPromotion
 }
 
